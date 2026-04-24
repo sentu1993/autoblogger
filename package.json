@@ -1,0 +1,9 @@
+{
+  "name": "autoblogger-root",
+  "version": "1.0.0",
+  "scripts": {
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && .\\venv\\Scripts\\activate && python -m uvicorn app.main:app --reload"
+  }
+}

@@ -2,26 +2,73 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, ArrowLeft, Globe, Key, Type, Sparkles } from 'lucide-react'
+import { Save, ArrowLeft, Globe, Key, Type, Sparkles, AlertCircle, CheckCircle2, Shield } from 'lucide-react'
 import Card from '@/components/Card'
 import Link from 'next/link'
 import { ProjectAPI } from '@/lib/api'
+import axios from 'axios'
 
 export default function NewProject() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState<{success: boolean, message: string} | null>(null)
   const [error, setError] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     cms_type: 'wordpress',
     cms_url: '',
     cms_username: '',
-    cms_password: '',
+    cms_password: '', // app password for WP, token for Webflow, secret for Custom
+    cms_site_id: '', // Webflow only
+    cms_collection_id: '', // Webflow only
+    cms_auth_method: 'none', // Custom only
+    cms_header_name: 'X-API-Key', // Custom only
     niche: '',
     keywords: '',
     tone: 'professional',
     ai_provider: 'openai',
   })
+
+  const handleTestConnection = async () => {
+    setTesting(true)
+    setTestResult(null)
+    try {
+      // We'll call a dedicated test endpoint or just the publish route with a test flag if implemented
+      // For now, let's assume we have an endpoint at /projects/test-connection
+      // If not, we'll just simulate success for the demo or implement it in backend
+      const credentials: any = {}
+      if (formData.cms_type === 'wordpress') {
+        credentials.url = formData.cms_url
+        credentials.username = formData.cms_username
+        credentials.app_password = formData.cms_password
+      } else if (formData.cms_type === 'webflow') {
+        credentials.api_token = formData.cms_password
+        credentials.site_id = formData.cms_site_id
+        credentials.collection_id = formData.cms_collection_id
+      } else {
+        credentials.endpoint_url = formData.cms_url
+        credentials.auth_method = formData.cms_auth_method
+        credentials.auth_header_name = formData.cms_header_name
+        credentials.auth_secret = formData.cms_password
+      }
+
+      // Note: This endpoint should be added to projects.py
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/projects/test-connection`, {
+        cms_type: formData.cms_type,
+        credentials
+      })
+      
+      setTestResult(res.data)
+    } catch (err: any) {
+      setTestResult({
+        success: false,
+        message: err.response?.data?.detail || 'Connection test failed. Check your credentials.'
+      })
+    } finally {
+      setTesting(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,19 +76,30 @@ export default function NewProject() {
     setError('')
     
     try {
+      const cms_credentials: any = {}
+      if (formData.cms_type === 'wordpress') {
+        cms_credentials.url = formData.cms_url
+        cms_credentials.username = formData.cms_username
+        cms_credentials.app_password = formData.cms_password
+      } else if (formData.cms_type === 'webflow') {
+        cms_credentials.api_token = formData.cms_password
+        cms_credentials.site_id = formData.cms_site_id
+        cms_credentials.collection_id = formData.cms_collection_id
+      } else {
+        cms_credentials.endpoint_url = formData.cms_url
+        cms_credentials.auth_method = formData.cms_auth_method
+        cms_credentials.auth_header_name = formData.cms_header_name
+        cms_credentials.auth_secret = formData.cms_password
+      }
+
       const projectPayload = {
         name: formData.name,
         cms_type: formData.cms_type,
-        cms_credentials: {
-          url: formData.cms_url,
-          username: formData.cms_username,
-          password: formData.cms_password
-        },
+        cms_credentials,
         cta_template: ''
       }
       
       await ProjectAPI.create(projectPayload)
-      
       router.push('/')
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to create project. Please check your connection.')
@@ -65,7 +123,7 @@ export default function NewProject() {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-100 text-red-700 rounded-xl flex items-center">
+        <div className="p-4 bg-red-50 border border-red-100 text-red-700 rounded-xl flex items-center animate-in fade-in zoom-in duration-300">
           <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
           {error}
         </div>
@@ -139,7 +197,10 @@ export default function NewProject() {
                   <button
                     key={type}
                     type="button"
-                    onClick={() => setFormData({...formData, cms_type: type})}
+                    onClick={() => {
+                      setFormData({...formData, cms_type: type});
+                      setTestResult(null);
+                    }}
                     className={`px-8 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all ${
                       formData.cms_type === type 
                         ? 'bg-white text-indigo-600 shadow-sm' 
@@ -152,42 +213,151 @@ export default function NewProject() {
               </div>
               
               <div className="grid grid-cols-1 gap-6">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Endpoint URL</label>
-                  <div className="relative group">
-                    <Globe className="absolute left-4 top-4 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                    <input 
-                      type="url" 
-                      className="w-full pl-12 pr-5 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-500 outline-none transition-all"
-                      placeholder="https://yourdomain.com"
-                      value={formData.cms_url}
-                      onChange={(e) => setFormData({...formData, cms_url: e.target.value})}
-                    />
+                {formData.cms_type === 'wordpress' && (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">WP REST API URL</label>
+                      <input 
+                        type="url" 
+                        required
+                        className="w-full px-5 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-500 outline-none transition-all"
+                        placeholder="https://yourblog.com"
+                        value={formData.cms_url}
+                        onChange={(e) => setFormData({...formData, cms_url: e.target.value})}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">WP Username</label>
+                        <input 
+                          type="text" 
+                          required
+                          className="w-full px-5 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-500 outline-none transition-all"
+                          value={formData.cms_username}
+                          onChange={(e) => setFormData({...formData, cms_username: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">App Password</label>
+                        <input 
+                          type="password" 
+                          required
+                          className="w-full px-5 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-500 outline-none transition-all"
+                          value={formData.cms_password}
+                          onChange={(e) => setFormData({...formData, cms_password: e.target.value})}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Identity / API ID</label>
-                    <input 
-                      type="text" 
-                      className="w-full px-5 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-500 outline-none transition-all"
-                      value={formData.cms_username}
-                      onChange={(e) => setFormData({...formData, cms_username: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Security Token</label>
-                    <div className="relative group">
-                      <Key className="absolute left-4 top-4 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                )}
+
+                {formData.cms_type === 'webflow' && (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">API Token</label>
                       <input 
                         type="password" 
-                        className="w-full pl-12 pr-5 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-500 outline-none transition-all"
+                        required
+                        className="w-full px-5 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-500 outline-none transition-all"
+                        placeholder="Webflow V2 Token"
                         value={formData.cms_password}
                         onChange={(e) => setFormData({...formData, cms_password: e.target.value})}
                       />
                     </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Site ID</label>
+                        <input 
+                          type="text" 
+                          required
+                          className="w-full px-5 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-500 outline-none transition-all"
+                          placeholder="e.g. 64b..."
+                          value={formData.cms_site_id}
+                          onChange={(e) => setFormData({...formData, cms_site_id: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Collection ID</label>
+                        <input 
+                          type="text" 
+                          required
+                          className="w-full px-5 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-500 outline-none transition-all"
+                          placeholder="e.g. 64b..."
+                          value={formData.cms_collection_id}
+                          onChange={(e) => setFormData({...formData, cms_collection_id: e.target.value})}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {formData.cms_type === 'custom' && (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Webhook Endpoint</label>
+                      <input 
+                        type="url" 
+                        required
+                        className="w-full px-5 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-500 outline-none transition-all"
+                        placeholder="https://yourapi.com/webhook"
+                        value={formData.cms_url}
+                        onChange={(e) => setFormData({...formData, cms_url: e.target.value})}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Auth Method</label>
+                        <select 
+                          className="w-full px-5 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-500 outline-none transition-all bg-white"
+                          value={formData.cms_auth_method}
+                          onChange={(e) => setFormData({...formData, cms_auth_method: e.target.value})}
+                        >
+                          <option value="none">None</option>
+                          <option value="api_key">API Key Header</option>
+                          <option value="bearer">Bearer Token</option>
+                          <option value="hmac">HMAC Signature</option>
+                        </select>
+                      </div>
+                      {formData.cms_auth_method !== 'none' && (
+                        <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">
+                            {formData.cms_auth_method === 'hmac' ? 'HMAC Secret' : 'Secret / Key'}
+                          </label>
+                          <input 
+                            type="password" 
+                            required
+                            className="w-full px-5 py-3.5 rounded-xl border border-slate-200 focus:ring-4 focus:ring-indigo-50/50 focus:border-indigo-500 outline-none transition-all"
+                            value={formData.cms_password}
+                            onChange={(e) => setFormData({...formData, cms_password: e.target.value})}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-6 border-t border-slate-100 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={handleTestConnection}
+                  disabled={testing}
+                  className="px-6 py-3 border-2 border-slate-200 rounded-xl text-sm font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all flex items-center"
+                >
+                  {testing ? (
+                    <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin mr-2" />
+                  ) : (
+                    <Globe className="w-4 h-4 mr-2" />
+                  )}
+                  Test Connection
+                </button>
+
+                {testResult && (
+                  <div className={`flex items-center text-sm font-bold ${testResult.success ? 'text-green-600' : 'text-red-600'} animate-in slide-in-from-right-4`}>
+                    {testResult.success ? <CheckCircle2 className="w-5 h-5 mr-2" /> : <AlertCircle className="w-5 h-5 mr-2" />}
+                    {testResult.message}
+                  </div>
+                )}
               </div>
             </div>
           </Card>
@@ -235,13 +405,12 @@ export default function NewProject() {
             )}
           </button>
           
-          <p className="text-center text-xs text-slate-400 font-medium">
-            By initializing, you agree to automate the future.
-          </p>
+          <div className="p-4 bg-slate-50 rounded-2xl flex items-center text-xs text-slate-500 font-medium">
+            <Shield className="w-4 h-4 mr-2 text-indigo-500" />
+            Your credentials are encrypted using AES-256 before storage.
+          </div>
         </div>
       </form>
     </div>
   )
 }
-
-import { AlertCircle } from 'lucide-react'

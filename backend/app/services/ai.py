@@ -28,28 +28,34 @@ class AIService:
 
     def get_seo_prompt(self, facts: str, keywords: str, tone: str) -> str:
         return f"""
-        You are a professional SEO content writer. 
-        Based on the following facts, write a completely original, SEO-optimized blog article.
+        You are a world-class SEO content architect and Google Search Authority expert.
+        Based on the following facts, build an elite, high-formatting blog article designed for instant indexing and authority.
         
-        FACTS:
+        FACTS TO SYNTHESIZE:
         {facts}
         
-        KEYWORDS TO TARGET:
+        KEYWORDS TO DOMINATE (Primary keyword is the first one):
         {keywords}
         
-        TONE:
+        TONE PROTOCOL:
         {tone}
         
-        REQUIREMENTS:
-        1. 0% plagiarism. Rewrite everything in your own words.
-        2. Use H1, H2, and H3 tags.
-        3. Maintain a natural keyword density.
-        4. Return the result in the following JSON format:
+        ELITE FORMATTING REQUIREMENTS:
+        1. SEMANTIC STRUCTURE: Use HTML5 tags. Start with a powerful <h1> title. Use at least 4 <h2> subheadings and 3 <h3> sub-subheadings for deep hierarchy.
+        2. SPACING & READABILITY: Paragraphs must not exceed 3 sentences. Use <strong> for emphasis.
+        3. RICH ELEMENTS: Include at least one <ul> bulleted list and one <ol> numbered list. Use <blockquote> for a expert quote/insight.
+        4. IMAGE STRATEGY: Suggest 2 placeholders for images with <img> tags including descriptive 'alt' text.
+        5. PLAGIARISM: 0% plagiarism. Rewrite everything from the facts in your own expert voice.
+        6. SCHEMA: Generate a valid JSON-LD script for an Article and an FAQPage based on the content.
+        
+        RETURN FORMAT (JSON ONLY - No markdown blocks):
         {{
-          "seo_title": "String (max 60 chars)",
-          "meta_description": "String (max 160 chars)",
-          "slug": "kebab-case-string",
-          "content_html": "Full HTML string with <h2>, <h3>, <p>, <ul>",
-          "suggested_tags": ["tag1", "tag2"]
+          "seo_title": "Optimized for clicks (max 60 chars)",
+          "meta_description": "High-intent summary (max 160 chars)",
+          "slug": "url-friendly-kebab-case-slug",
+          "content_html": "Professional HTML with <h1>, <h2>, <h3>, <p>, <blockquote>, <ul>, <ol>, <strong>, <img> tags",
+          "schema_json": "A valid JSON-LD object (as a string or object)",
+          "suggested_tags": ["tag1", "tag2", "tag3"],
+          "seo_score_target": 100
         }}
         """

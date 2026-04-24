@@ -28,3 +28,14 @@ def get_project(project_id: int, session: Session = Depends(get_session)):
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     return project
+
+@router.post("/test-connection")
+def test_connection(data: dict):
+    from app.services.cms import CMSService
+    cms_type = data.get("cms_type")
+    credentials = data.get("credentials")
+    if not cms_type or not credentials:
+        raise HTTPException(status_code=400, detail="Missing cms_type or credentials")
+    
+    result = CMSService.test_connection(cms_type, credentials)
+    return result

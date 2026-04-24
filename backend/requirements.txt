@@ -21,3 +21,5 @@ cryptography
 httpx
 requests
 python-docx
+pytz
+lxml

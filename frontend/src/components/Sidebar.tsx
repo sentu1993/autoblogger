@@ -9,13 +9,15 @@ import {
   FileText, 
   Settings, 
   LogOut,
-  Zap
+  Zap,
+  Calendar
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'New Project', href: '/projects/new', icon: PlusCircle },
   { name: 'Sources', href: '/sources', icon: Rss },
+  { name: 'Schedule', href: '/schedule', icon: Calendar },
   { name: 'All Posts', href: '/posts', icon: FileText },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]

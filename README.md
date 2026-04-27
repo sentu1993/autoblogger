@@ -37,12 +37,34 @@ An automated content generation and publishing system that turns RSS feeds and N
 
 See [.env](.env) for the required configuration.
 
+
+
 ## Project Structure
 
 - `backend/`: FastAPI application, database models, and Celery tasks.
 - `frontend/`: Next.js dashboard for managing projects and sources.
 - `infrastructure/`: Additional configuration for deployment.
 
+
 ## License
 
 This project is open-source and available for the community.
+
+## Screenshots
+
+<img width="1917" height="862" alt="image" src="https://github.com/user-attachments/assets/154c6742-a1ba-4083-a5c0-4fea696050ed" />
+
+
+<img width="1900" height="840" alt="image" src="https://github.com/user-attachments/assets/fe9ccec5-92d3-4cfb-8276-517175ecdc65" />
+
+
+<img width="1505" height="642" alt="image" src="https://github.com/user-attachments/assets/176aae58-a28b-4900-9d4d-de3d1de5e7dc" />
+
+
+<img width="1887" height="850" alt="image" src="https://github.com/user-attachments/assets/f0687729-27dc-446d-a2c7-79573cdb5693" />
+
+
+<img width="1532" height="807" alt="image" src="https://github.com/user-attachments/assets/7c5a2afd-15aa-4604-b73a-9b473d52075f" />
+
+
+
